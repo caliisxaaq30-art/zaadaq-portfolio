@@ -45,8 +45,23 @@
       <a href="#contact">Contact</a>
     </nav>
     <div class="nav-actions">
-      <button class="login-button"  id="login-trigger"  type="button">Login <span>↗</span></button>
-      <button class="logout-button" id="logout-trigger" type="button" hidden>Logout <span>↗</span></button>
+      <button class="login-button" id="login-trigger" type="button">Login <span>↗</span></button>
+      
+      <div class="user-menu-wrap" id="user-menu-wrap" hidden>
+        <button class="user-pill-btn" id="user-pill-btn" type="button" aria-expanded="false" aria-label="User menu">
+          <span class="user-avatar" id="user-avatar-initial">Z</span>
+          <span class="user-first-name" id="user-first-name">Account</span>
+          <small>▼</small>
+        </button>
+        <div class="user-dropdown-menu" id="user-dropdown-menu" hidden>
+          <div class="dropdown-header">
+            <strong id="dropdown-name">User Name</strong>
+            <span id="dropdown-email">user@email.com</span>
+          </div>
+          <button class="dropdown-logout-btn" id="logout-trigger" type="button">Logout <span>↗</span></button>
+        </div>
+      </div>
+
       <a class="nav-cta" href="#contact">Let's work together <span>↗</span></a>
     </div>
   </header>
@@ -334,8 +349,14 @@
               <option>Business Consulting</option>
             </select>
           </label>
+          <label>Send via
+            <select name="sendChannel" id="send-channel">
+              <option value="whatsapp">WhatsApp (+252 615 156 485)</option>
+              <option value="gmail">Email / Gmail (wllzaadaq08@gmail.com)</option>
+            </select>
+          </label>
           <label>Tell me a little about it<textarea name="message" rows="3" required placeholder="Your message"></textarea></label>
-          <button class="button primary" type="submit">Send via WhatsApp <b>↗</b></button>
+          <button class="button primary" id="contact-submit-btn" type="submit">Send via WhatsApp <b>↗</b></button>
         </form>
       </div>
     </section>
@@ -354,7 +375,12 @@
       <form id="login-form">
         <label class="register-only" hidden>Your name<input name="loginName" autocomplete="name" placeholder="Enter your name" /></label>
         <label>Email address<input name="loginEmail" type="email" required autocomplete="email" placeholder="you@email.com" /></label>
-        <label>Password<input name="loginPassword" type="password" required minlength="8" autocomplete="current-password" placeholder="At least 8 characters" /></label>
+        <label>Password
+          <div class="password-input-wrap">
+            <input name="loginPassword" id="login-password-input" type="password" required minlength="8" autocomplete="current-password" placeholder="At least 8 characters" />
+            <button type="button" class="toggle-password" id="toggle-password" aria-label="Show password" title="Show/Hide password">👁️</button>
+          </div>
+        </label>
         <p class="form-error" id="login-error" role="alert"></p>
         <button class="button primary" type="submit">Login <b>↗</b></button>
         <button class="switch-auth" id="switch-auth" type="button">New here? Create an account</button>

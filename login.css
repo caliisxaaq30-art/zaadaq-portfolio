@@ -1,18 +1,182 @@
-.nav-actions { display: flex; align-items: center; gap: 10px; }
-.login-button, .logout-button { border: 0; background: transparent; color: #c3c2cf; font: 600 12px Manrope, sans-serif; cursor: pointer; padding: 10px; }
-.login-button:hover, .logout-button:hover { color: #fff; }
-.login-button span, .logout-button span { color: var(--cyan); margin-left: 4px; }
-.logout-button { border: 1px solid #3a3a46; border-radius: 99px; padding: 10px 13px; color: #fff; }
-.login-modal { position: fixed; z-index: 50; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(4, 4, 8, .78); backdrop-filter: blur(10px); opacity: 0; visibility: hidden; transition: .25s; }
+/* ===========================
+   ZAADAQ Portfolio — login.css
+   =========================== */
+
+.nav-actions { display: flex; align-items: center; gap: 12px; position: relative; }
+
+.login-button {
+  border: 1px solid #3a3a46;
+  border-radius: 99px;
+  background: transparent;
+  color: #fff;
+  font: 600 12px Manrope, sans-serif;
+  cursor: pointer;
+  padding: 10px 16px;
+  transition: all 0.25s ease;
+}
+.login-button:hover { border-color: var(--accent); color: #fff; transform: translateY(-1px); }
+.login-button span { color: var(--cyan); margin-left: 4px; }
+
+/* ── User Profile Pill & Dropdown ───────────────────── */
+.user-menu-wrap { position: relative; }
+
+.user-pill-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(23, 23, 32, 0.9);
+  border: 1px solid var(--accent);
+  border-radius: 99px;
+  padding: 5px 14px 5px 6px;
+  color: #fff;
+  font: 600 12px Manrope, sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.user-pill-btn:hover { background: #1e1d2e; box-shadow: 0 0 16px rgba(129, 120, 255, 0.25); }
+
+.user-avatar {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--cyan));
+  color: #fff;
+  font-weight: 800;
+  font-size: 12px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.user-pill-btn small { font-size: 8px; opacity: 0.6; margin-left: 2px; }
+
+.user-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 220px;
+  background: #14141d;
+  border: 1px solid #323142;
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  z-index: 100;
+  animation: fadeInDown 0.2s ease;
+}
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-header {
+  border-bottom: 1px solid #282736;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+}
+.dropdown-header strong { display: block; font-size: 13px; color: #fff; }
+.dropdown-header span { display: block; font-size: 11px; color: #888796; word-break: break-all; margin-top: 2px; }
+
+.dropdown-logout-btn {
+  width: 100%;
+  border: 1px solid #3a3848;
+  background: rgba(255, 90, 100, 0.1);
+  color: #ff858d;
+  font: 600 12px Manrope, sans-serif;
+  border-radius: 6px;
+  padding: 9px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: .2s;
+}
+.dropdown-logout-btn:hover { background: rgba(255, 90, 100, 0.25); color: #fff; border-color: #ff5a64; }
+
+/* ── Login Modal ────────────────────────────────────── */
+.login-modal {
+  position: fixed;
+  z-index: 50;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(4, 4, 8, .82);
+  backdrop-filter: blur(12px);
+  opacity: 0;
+  visibility: hidden;
+  transition: .25s;
+}
 .login-modal.open { opacity: 1; visibility: visible; }
-.login-panel { width: min(100%, 440px); position: relative; padding: 42px; border: 1px solid #3e3c4a; border-radius: 12px; background: linear-gradient(145deg, #22203a, #111119 62%); box-shadow: 0 30px 90px #000a; transform: translateY(12px); transition: .25s; }
+
+.login-panel {
+  width: min(100%, 440px);
+  position: relative;
+  padding: 42px;
+  border: 1px solid #3e3c4a;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #22203a, #111119 62%);
+  box-shadow: 0 30px 90px #000a;
+  transform: translateY(14px);
+  transition: .25s;
+  overflow: hidden;
+}
+.login-panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--cyan));
+}
+
 .login-modal.open .login-panel { transform: translateY(0); }
 .login-panel h2 { font-size: 43px; line-height: .98; letter-spacing: -.07em; margin: 21px 0 14px; }
 .login-panel > p:not(.eyebrow) { color: var(--muted); font-size: 13px; line-height: 1.7; }
 .login-panel form { display: grid; gap: 18px; margin-top: 27px; }
 .login-panel label { display: grid; gap: 8px; color: #b2b0bc; font-size: 11px; }
-.login-panel .button { justify-self: start; margin-top: 4px; }
+
+/* Password wrap with eye toggle */
+.password-input-wrap { position: relative; display: flex; align-items: center; }
+.password-input-wrap input { width: 100%; padding-right: 42px; }
+.toggle-password {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: 0;
+  color: #8a889a;
+  cursor: pointer;
+  font-size: 15px;
+  padding: 5px;
+  transition: color 0.2s;
+}
+.toggle-password:hover { color: #fff; }
+
+.login-panel .button { justify-self: start; margin-top: 4px; width: 100%; text-align: center; }
 .form-error { min-height: 18px; margin: -5px 0 0; color: #ff9fa9; font-size: 11px; }
-.switch-auth { justify-self: start; padding: 0; border: 0; background: transparent; color: #b7b3ff; font: 600 12px Manrope, sans-serif; cursor: pointer; }
-.close-modal { position: absolute; right: 18px; top: 13px; border: 0; background: transparent; color: #bbb9c7; cursor: pointer; font: 30px/1 Arial, sans-serif; }
-@media(max-width:760px) { .nav-actions .nav-cta { display: none; } .login-panel { padding: 32px 25px; } }
+
+.switch-auth {
+  justify-self: center;
+  padding: 6px;
+  border: 0;
+  background: transparent;
+  color: #b7b3ff;
+  font: 600 12px Manrope, sans-serif;
+  cursor: pointer;
+  transition: color .2s;
+}
+.switch-auth:hover { color: #fff; text-decoration: underline; }
+
+.close-modal {
+  position: absolute;
+  right: 18px; top: 15px;
+  border: 0;
+  background: transparent;
+  color: #bbb9c7;
+  cursor: pointer;
+  font: 28px/1 Arial, sans-serif;
+  transition: color .2s;
+}
+.close-modal:hover { color: #fff; }
+
+@media(max-width:760px) {
+  .nav-actions .nav-cta { display: none; }
+  .login-panel { padding: 32px 25px; }
+}

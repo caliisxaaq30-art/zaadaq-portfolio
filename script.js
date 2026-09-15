@@ -157,30 +157,61 @@ window.addEventListener('pointermove', e => {
   cursorGlow.style.top  = e.clientY + 'px';
 });
 
-// ── Contact form — WhatsApp + client validation ────────
-const contactForm = document.querySelector('#contact-form');
+// ── Contact form — WhatsApp / Gmail + client validation ──
+const contactForm      = document.querySelector('#contact-form');
+const sendChannel      = document.querySelector('#send-channel');
+const contactSubmitBtn = document.querySelector('#contact-submit-btn');
+
+if (sendChannel && contactSubmitBtn) {
+  sendChannel.addEventListener('change', () => {
+    const isWhatsApp = sendChannel.value === 'whatsapp';
+    contactSubmitBtn.innerHTML = isWhatsApp
+      ? 'Send via WhatsApp <b>↗</b>'
+      : 'Send via Gmail / Email <b>↗</b>';
+  });
+}
 
 contactForm.addEventListener('submit', event => {
   event.preventDefault();
   if (!validateContactForm()) return;
 
-  const data = new FormData(contactForm);
-  const text = [
+  const data    = new FormData(contactForm);
+  const channel = data.get('sendChannel') || 'whatsapp';
+  const name    = data.get('name');
+  const email   = data.get('email');
+  const type    = data.get('projectType');
+  const msg     = data.get('message');
+
+  const formattedText = [
     'Salaan ZAADAQ, waxaan rabaa inaan kaa codsado mashruuc.',
     '',
-    `Magaca: ${data.get('name')}`,
-    `Email: ${data.get('email')}`,
-    `Nooca mashruuca: ${data.get('projectType')}`,
+    `Magaca: ${name}`,
+    `Email: ${email}`,
+    `Nooca mashruuca: ${type}`,
     '',
     'Faahfaahin:',
-    data.get('message'),
+    msg,
   ].join('\n');
 
-  window.open(`https://wa.me/252615156485?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+  if (channel === 'whatsapp') {
+    const waUrl = `https://wa.me/252615156485?text=${encodeURIComponent(formattedText)}`;
+    window.open(waUrl, '_blank', 'noopener');
+  } else {
+    // Gmail Web Compose with mailto fallback
+    const subject  = encodeURIComponent(`New Project Inquiry from ${name} (${type})`);
+    const bodyText = encodeURIComponent(formattedText);
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=wllzaadaq08@gmail.com&su=${subject}&body=${bodyText}`;
+    
+    // Attempt Gmail Web Compose in new tab
+    const win = window.open(gmailUrl, '_blank', 'noopener');
+    if (!win || win.closed || typeof win.closed === 'undefined') {
+      // Fallback to mailto
+      window.location.href = `mailto:wllzaadaq08@gmail.com?subject=${subject}&body=${bodyText}`;
+    }
+  }
 });
 
 function validateContactForm() {
-  // Remove any existing error messages first
   contactForm.querySelectorAll('.field-error').forEach(el => el.remove());
 
   const rules = [
@@ -215,6 +246,44 @@ const registerOnly     = document.querySelector('.register-only');
 const loginTitle       = document.querySelector('#login-title');
 const loginDescription = document.querySelector('#login-description');
 
+// Password Eye Toggle
+const passwordInput  = document.querySelector('#login-password-input');
+const togglePassword = document.querySelector('#toggle-password');
+
+if (togglePassword && passwordInput) {
+  togglePassword.addEventListener('click', () => {
+    const isPassword = passwordInput.type === 'password';
+    passwordInput.type = isPassword ? 'text' : 'password';
+    togglePassword.textContent = isPassword ? '🙈' : '👁️';
+    togglePassword.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+  });
+}
+
+// User Menu Dropdown Elements
+const userMenuWrap       = document.querySelector('#user-menu-wrap');
+const userPillBtn        = document.querySelector('#user-pill-btn');
+const userDropdownMenu   = document.querySelector('#user-dropdown-menu');
+const userAvatarInitial  = document.querySelector('#user-avatar-initial');
+const userFirstName      = document.querySelector('#user-first-name');
+const dropdownName       = document.querySelector('#dropdown-name');
+const dropdownEmail      = document.querySelector('#dropdown-email');
+
+if (userPillBtn && userDropdownMenu) {
+  userPillBtn.addEventListener('click', event => {
+    event.stopPropagation();
+    const open = userDropdownMenu.hidden;
+    userDropdownMenu.hidden = !open;
+    userPillBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+
+  window.addEventListener('click', () => {
+    if (!userDropdownMenu.hidden) {
+      userDropdownMenu.hidden = true;
+      userPillBtn.setAttribute('aria-expanded', 'false');
+    }
+  });
+}
+
 let isRegistering = false;
 
 // ── Hybrid Auth (Server API + Static Fallback) ───────
@@ -227,7 +296,6 @@ async function getAuthenticatedUser() {
     return user;
   } catch (err) {
     if (err.message === 'STATIC_HOST' || err.name === 'TypeError') {
-      // Fallback for static hosts like GitHub Pages / Netlify
       const stored = localStorage.getItem('zaadaq_user');
       return stored ? JSON.parse(stored) : null;
     }
@@ -237,14 +305,22 @@ async function getAuthenticatedUser() {
 
 async function updateLoginState() {
   const user = await getAuthenticatedUser();
-  if (user && user.name) {
-    loginTrigger.hidden  = true;
-    logoutTrigger.hidden = false;
-    const firstName = user.name.trim().split(' ')[0];
-    logoutTrigger.innerHTML = `Logout, ${firstName} <span>↗</span>`;
+  if (user && (user.name || user.email)) {
+    loginTrigger.hidden = true;
+    if (userMenuWrap) userMenuWrap.hidden = false;
+
+    const nameStr   = (user.name || user.email || 'User').trim();
+    const firstName = nameStr.split(' ')[0];
+    const initial   = firstName.charAt(0).toUpperCase();
+
+    if (userAvatarInitial) userAvatarInitial.textContent = initial;
+    if (userFirstName)     userFirstName.textContent     = firstName;
+    if (dropdownName)      dropdownName.textContent      = nameStr;
+    if (dropdownEmail)     dropdownEmail.textContent     = user.email || '';
   } else {
-    loginTrigger.hidden  = false;
-    logoutTrigger.hidden = true;
+    loginTrigger.hidden = false;
+    if (userMenuWrap) userMenuWrap.hidden = true;
+    if (userDropdownMenu) userDropdownMenu.hidden = true;
   }
 }
 
@@ -306,7 +382,6 @@ loginForm.addEventListener('submit', async event => {
     });
 
     if (response.status === 404) {
-      // Handle static host (GitHub Pages) fallback
       const user = { name: name || email.split('@')[0], email };
       localStorage.setItem('zaadaq_user', JSON.stringify(user));
       loginForm.reset();
@@ -323,7 +398,6 @@ loginForm.addEventListener('submit', async event => {
     await updateLoginState();
   } catch (error) {
     if (error.name === 'TypeError') {
-      // Network/static fallback
       const user = { name: name || email.split('@')[0], email };
       localStorage.setItem('zaadaq_user', JSON.stringify(user));
       loginForm.reset();
@@ -336,20 +410,17 @@ loginForm.addEventListener('submit', async event => {
 });
 
 // ── Logout Action ─────────────────────────────────────
-logoutTrigger.addEventListener('click', async () => {
-  try {
-    await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
-  } catch {
-    // Ignore network error on static deployment
-  }
-  localStorage.removeItem('zaadaq_user');
-  await updateLoginState();
-
-  // Show brief feedback toast if desired
-  const origText = logoutTrigger.innerHTML;
-  logoutTrigger.textContent = 'Logged out';
-  setTimeout(() => updateLoginState(), 1000);
-});
+if (logoutTrigger) {
+  logoutTrigger.addEventListener('click', async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+    } catch {
+      // Ignore network error on static deployment
+    }
+    localStorage.removeItem('zaadaq_user');
+    await updateLoginState();
+  });
+}
 
 window.addEventListener('keydown', event => {
   if (event.key === 'Escape') closeLoginModal();
