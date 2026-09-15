@@ -217,15 +217,32 @@ const loginDescription = document.querySelector('#login-description');
 
 let isRegistering = false;
 
-async function updateLoginState() {
+// ── Hybrid Auth (Server API + Static Fallback) ───────
+async function getAuthenticatedUser() {
   try {
-    const response = await fetch('/api/auth/me', { credentials: 'same-origin' });
-    if (!response.ok) throw new Error();
-    const { user } = await response.json();
+    const res = await fetch('/api/auth/me', { credentials: 'same-origin' });
+    if (res.status === 404) throw new Error('STATIC_HOST');
+    if (!res.ok) return null;
+    const { user } = await res.json();
+    return user;
+  } catch (err) {
+    if (err.message === 'STATIC_HOST' || err.name === 'TypeError') {
+      // Fallback for static hosts like GitHub Pages / Netlify
+      const stored = localStorage.getItem('zaadaq_user');
+      return stored ? JSON.parse(stored) : null;
+    }
+    return null;
+  }
+}
+
+async function updateLoginState() {
+  const user = await getAuthenticatedUser();
+  if (user && user.name) {
     loginTrigger.hidden  = true;
     logoutTrigger.hidden = false;
-    logoutTrigger.innerHTML = `Logout, ${user.name.split(' ')[0]} <span>↗</span>`;
-  } catch {
+    const firstName = user.name.trim().split(' ')[0];
+    logoutTrigger.innerHTML = `Logout, ${firstName} <span>↗</span>`;
+  } else {
     loginTrigger.hidden  = false;
     logoutTrigger.hidden = true;
   }
@@ -252,7 +269,6 @@ function openLoginModal() {
   setAuthMode(false);
   loginModal.classList.add('open');
   loginModal.setAttribute('aria-hidden', 'false');
-  // Focus first visible input
   const firstInput = loginForm.querySelector('input:not([hidden])');
   if (firstInput) firstInput.focus();
 }
@@ -273,12 +289,12 @@ loginForm.addEventListener('submit', async event => {
   event.preventDefault();
   loginError.textContent = '';
 
-  const data    = new FormData(loginForm);
-  const payload = {
-    email:    data.get('loginEmail'),
-    password: data.get('loginPassword'),
-    name:     data.get('loginName'),
-  };
+  const data     = new FormData(loginForm);
+  const name     = (data.get('loginName') || '').toString().trim();
+  const email    = (data.get('loginEmail') || '').toString().trim();
+  const password = (data.get('loginPassword') || '').toString().trim();
+
+  const payload  = { name, email, password };
 
   try {
     const endpoint = isRegistering ? '/api/auth/register' : '/api/auth/login';
@@ -288,21 +304,51 @@ loginForm.addEventListener('submit', async event => {
       credentials: 'same-origin',
       body:        JSON.stringify(payload),
     });
+
+    if (response.status === 404) {
+      // Handle static host (GitHub Pages) fallback
+      const user = { name: name || email.split('@')[0], email };
+      localStorage.setItem('zaadaq_user', JSON.stringify(user));
+      loginForm.reset();
+      closeLoginModal();
+      await updateLoginState();
+      return;
+    }
+
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Unable to continue.');
+
     loginForm.reset();
     closeLoginModal();
     await updateLoginState();
   } catch (error) {
-    loginError.textContent = error.message === 'Failed to fetch'
-      ? 'Run this site through the ZAADAQ server before logging in.'
-      : error.message;
+    if (error.name === 'TypeError') {
+      // Network/static fallback
+      const user = { name: name || email.split('@')[0], email };
+      localStorage.setItem('zaadaq_user', JSON.stringify(user));
+      loginForm.reset();
+      closeLoginModal();
+      await updateLoginState();
+    } else {
+      loginError.textContent = error.message;
+    }
   }
 });
 
+// ── Logout Action ─────────────────────────────────────
 logoutTrigger.addEventListener('click', async () => {
-  await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+  try {
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+  } catch {
+    // Ignore network error on static deployment
+  }
+  localStorage.removeItem('zaadaq_user');
   await updateLoginState();
+
+  // Show brief feedback toast if desired
+  const origText = logoutTrigger.innerHTML;
+  logoutTrigger.textContent = 'Logged out';
+  setTimeout(() => updateLoginState(), 1000);
 });
 
 window.addEventListener('keydown', event => {
